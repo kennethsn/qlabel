@@ -1,7 +1,7 @@
 /**
  * Copyright 2014 Google Inc. All rights reserved.
  * Author: Denny Vrandecic <vrandecic@google.com>
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -110,18 +110,13 @@ var wikidataTester = function(URI) {
 };
 
 var wikidataLoader = function(URIs) {
-    // TODO deal with more than 50 entities
-    return $.getJSON('https://www.wikidata.org/w/api.php?callback=?', {
-      action: 'wbgetentities' ,
-      ids: URIs.join('|'),
-      props: 'labels' ,
-      format: 'json'
+    return $.getJSON(`https://query.wikidata.org/sparql?query=PREFIX%20rdfs%3A%20%3Chttp%3A%2F%2Fwww.w3.org%2F2000%2F01%2Frdf-schema%23%3E%0ASELECT%20DISTINCT%20%3Fitem%20%3Flabel%20(lang(%3Flabel)%20as%20%3Flang)%7B%0AVALUES%3Fitem%7Bwd%3A${URIs.join('%20wd%3A')}%7D%0A%3Fitem%20rdfs%3Alabel%20%3Flabel%7D&format=json`, {
     }, function(data) {
       // TODO handle errors and exceptions
-      $.each(data.entities, function(id, entity) {
-        $.each(entity.labels, function(lang, label) {
-          setLabel(id, lang, label.value);
-        });
+      $.each(data.results.bindings, function(id, entity) {
+        temp_uri = entity.item.value.split("http://www.wikidata.org/entity/").pop();
+        setLabel(temp_uri, entity.lang.value, entity.label.value);
+
       });
     });
 };
@@ -319,7 +314,7 @@ setLoader(wikidataTester, wikidataLoader);
 // loadLabels([callback, [URIs]]) - load the URIs, then execute callback. If no
 //     URIs are given, load all URIs mentioned on the page in qlabel elements.
 //     callback takes no parameters.
-// getKnownURIs() - return all loaded URIs 
+// getKnownURIs() - return all loaded URIs
 // setLoader(tester, loader) - set a loader for URIs that will be run when the
 //     tester function hits. signature of the callback functions:
 //     string tester(string URI) - takes a URI and returns a posibly normalized
